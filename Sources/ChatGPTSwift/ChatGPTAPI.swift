@@ -16,6 +16,8 @@ import GPTEncoder
 
 public class ChatGPTAPI: @unchecked Sendable {
     
+    var streamDataTask: URLSessionDataTask?
+    
     public enum Constants {
         public static let defaultModel = "gpt-3.5-turbo"
         public static let defaultSystemText = "You're a helpful assistant"
@@ -185,6 +187,7 @@ public class ChatGPTAPI: @unchecked Sendable {
         var urlRequest = self.urlRequest
         urlRequest.httpBody = try jsonBody(text: text, model: model, systemText: systemText, temperature: temperature)
         let (result, response) = try await urlSession.bytes(for: urlRequest)
+        streamDataTask = result.task
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw "Invalid response"
