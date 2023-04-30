@@ -16,7 +16,7 @@ import GPTEncoder
 
 public class ChatGPTAPI: @unchecked Sendable {
     
-    var streamDataTask: URLSessionDataTask?
+    public var streamDataTask: URLSessionDataTask?
     
     public enum Constants {
         public static let defaultModel = "gpt-3.5-turbo"
