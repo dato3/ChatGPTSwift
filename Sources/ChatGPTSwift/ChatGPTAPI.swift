@@ -13,9 +13,7 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
     public var streamDataTask: URLSessionDataTask?
     
     public enum Constants {
-        public static let defaultModel = "gpt-3.5-turbo"
         public static let defaultSystemText = "You're a helpful assistant"
-        public static let defaultTemperature = 0.5
     }
     
     private let urlString = "https://streamingwords-53f47dwjva-uc.a.run.app"
@@ -45,9 +43,7 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
         .init(role: "system", content: content)
     }
     
-    public init(apiKey: String) {
-        self.apiKey = apiKey
-    }
+    public init() {}
     
     private func generateMessages(from text: String, systemText: String) -> [Message] {
         var messages = [systemMessage(content: systemText)] + historyList + [Message(role: "user", content: text)]
@@ -58,7 +54,7 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
         return messages
     }
     
-    private func jsonBody(text: String, model: String, systemText: String, temperature: Double, stream: Bool = true) throws -> Data {
+    private func jsonBody(text: String, systemText: String) throws -> Data {
         let request = Request(msg: generateMessages(from: text, systemText: systemText))
         return try JSONEncoder().encode(request)
     }
@@ -78,11 +74,9 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
     }
 
     public func sendMessageStream(text: String,
-                                  model: String = ChatGPTAPI.Constants.defaultModel,
-                                  systemText: String = ChatGPTAPI.Constants.defaultSystemText,
-                                  temperature: Double = ChatGPTAPI.Constants.defaultTemperature) async throws -> AsyncThrowingStream<String, Error> {
+                                  systemText: String = ChatGPTAPI.Constants.defaultSystemText) async throws -> AsyncThrowingStream<String, Error> {
         var urlRequest = self.urlRequest
-        urlRequest.httpBody = try jsonBody(text: text, model: model, systemText: systemText, temperature: temperature)
+        urlRequest.httpBody = try jsonBody(text: text, systemText: systemText)
         let (result, response) = try await urlSession.bytes(for: urlRequest, delegate: self)
         streamDataTask = result.task
         
