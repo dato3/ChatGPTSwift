@@ -97,7 +97,6 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
                 do {
                     var responseText = ""
                     for try await line in result.lines {
-                      print(line)
                       if line.starts(with: "data: ") {
                         let text = String(line.dropFirst(6))
                         responseText += text
