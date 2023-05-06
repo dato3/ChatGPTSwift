@@ -24,10 +24,7 @@ extension Array where Element == Message {
 }
 
 struct Request: Codable {
-    let model: String
-    let temperature: Double
-    let messages: [Message]
-    let stream: Bool
+    let msg: [Message]
 }
 
 struct ErrorRootResponse: Decodable {
