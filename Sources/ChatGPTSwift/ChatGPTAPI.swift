@@ -9,7 +9,7 @@ import Foundation
 import GPTEncoder
 
 public class ChatGPTAPI: NSObject, @unchecked Sendable {
-    
+  
     public var streamDataTask: URLSessionDataTask?
     
     public enum Constants {
@@ -17,7 +17,6 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
     }
     
     private let urlString = "https://streamingwords-53f47dwjva-uc.a.run.app"
-    private let apiKey: String
     private let gptEncoder = GPTEncoder()
     public private(set) var historyList = [Message]()
 
@@ -42,8 +41,6 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
     private func systemMessage(content: String) -> Message {
         .init(role: "system", content: content)
     }
-    
-    public init() {}
     
     private func generateMessages(from text: String, systemText: String) -> [Message] {
         var messages = [systemMessage(content: systemText)] + historyList + [Message(role: "user", content: text)]
@@ -127,36 +124,33 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
 }
 
 extension ChatGPTAPI: URLSessionTaskDelegate {
-  public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-      guard let serverTrust = challenge.protectionSpace.serverTrust,
-          challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust else {
-              completionHandler(.cancelAuthenticationChallenge, nil)
-              return
-      }
+  public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+    guard let serverTrust = challenge.protectionSpace.serverTrust,
+        challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust else {
+            return (.cancelAuthenticationChallenge, nil)
+    }
 
-      //Set policy to validate domain
-      let policy = SecPolicyCreateSSL(true, "streamingwords-53f47dwjva-uc.a.run.app" as CFString)
-      let policies = NSArray(object: policy)
-      SecTrustSetPolicies(serverTrust, policies)
+    //Set policy to validate domain
+    let policy = SecPolicyCreateSSL(true, "streamingwords-53f47dwjva-uc.a.run.app" as CFString)
+    let policies = NSArray(object: policy)
+    SecTrustSetPolicies(serverTrust, policies)
 
-      let certificateCount = SecTrustGetCertificateCount(serverTrust)
-      guard certificateCount > 0 else {
-              completionHandler(.cancelAuthenticationChallenge, nil)
-              return
-      }
-      let certificates = Set((0..<certificateCount)
-      .compactMap({  SecTrustGetCertificateAtIndex(serverTrust, $0) })
-      .map { SecCertificateCopyData($0) as Data })
+    let certificateCount = SecTrustGetCertificateCount(serverTrust)
+    guard certificateCount > 0 else {
+      return (.cancelAuthenticationChallenge, nil)
+    }
+    let certificates = Set((0..<certificateCount)
+    .compactMap({  SecTrustGetCertificateAtIndex(serverTrust, $0) })
+    .map { SecCertificateCopyData($0) as Data })
 
-      let localCertificates = Set(Certificate.localCertificates())
-      let isDisjoint = !certificates.isDisjoint(with: localCertificates)
-      if isDisjoint {
-        completionHandler(.useCredential, .init(trust: serverTrust))
-        return
-      }
+    let localCertificates = Set(Certificate.localCertificates())
+    let isDisjoint = !certificates.isDisjoint(with: localCertificates)
+    if isDisjoint {
+      return (.useCredential, .init(trust: serverTrust))
+    }
 
-      // No valid cert available
-      completionHandler(.cancelAuthenticationChallenge, nil)
+    // No valid cert available
+    return (.cancelAuthenticationChallenge, nil)
   }
 }
 
