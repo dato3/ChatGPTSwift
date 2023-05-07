@@ -25,6 +25,7 @@ extension Array where Element == Message {
 
 struct Request: Codable {
     let msg: [Message]
+    let limit: Int
 }
 
 struct ErrorRootResponse: Decodable {
