@@ -100,8 +100,8 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
                     for try await line in result.lines {
                       if line.starts(with: "data: ") {
                         let text = String(line.dropFirst(6))
-                        responseText += text
-                        continuation.yield(text)
+                        responseText += text.isEmpty ? "\n" : text
+                        continuation.yield(text.isEmpty ? "\n" : text)
                       }
                     }
                     self?.appendToHistoryList(userText: text, responseText: responseText)
