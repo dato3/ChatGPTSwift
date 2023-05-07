@@ -51,8 +51,8 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
         return messages
     }
     
-    private func jsonBody(text: String, systemText: String) throws -> Data {
-        let request = Request(msg: generateMessages(from: text, systemText: systemText))
+    private func jsonBody(text: String, systemText: String, limit: Int) throws -> Data {
+        let request = Request(msg: generateMessages(from: text, systemText: systemText), limit: limit)
         return try JSONEncoder().encode(request)
     }
     
@@ -71,9 +71,10 @@ public class ChatGPTAPI: NSObject, @unchecked Sendable {
     }
 
     public func sendMessageStream(text: String,
-                                  systemText: String = ChatGPTAPI.Constants.defaultSystemText) async throws -> AsyncThrowingStream<String, Error> {
+                                  systemText: String = ChatGPTAPI.Constants.defaultSystemText,
+                                  limit: Int) async throws -> AsyncThrowingStream<String, Error> {
         var urlRequest = self.urlRequest
-        urlRequest.httpBody = try jsonBody(text: text, systemText: systemText)
+        urlRequest.httpBody = try jsonBody(text: text, systemText: systemText, limit: limit)
         let (result, response) = try await urlSession.bytes(for: urlRequest, delegate: self)
         streamDataTask = result.task
         
